@@ -1,0 +1,170 @@
+import { supabase } from './supabase';
+import { runMetadataCheck, snapshotFromSong } from './metadata';
+import type { MetadataCheck, Mood, Song, SongWithExtras } from './types';
+
+type SongRow = Song & {
+  song_moods?: { moods: Mood | Mood[] | null }[];
+  metadata_checks?: MetadataCheck[];
+};
+
+function flattenSong(row: SongRow): SongWithExtras {
+  const moods = (row.song_moods ?? [])
+    .map((link) => (Array.isArray(link.moods) ? link.moods[0] : link.moods))
+    .filter((mood): mood is Mood => Boolean(mood));
+
+  const checks = [...(row.metadata_checks ?? [])].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+
+  const { song_moods, metadata_checks, ...song } = row;
+  void song_moods;
+  void metadata_checks;
+  return {
+    ...song,
+    moods,
+    latestCheck: checks[0] ?? null,
+  };
+}
+
+export async function fetchSongs(userId: string): Promise<SongWithExtras[]> {
+  const { data, error } = await supabase
+    .from('songs')
+    .select(
+      `
+      *,
+      song_moods ( moods ( id, name ) ),
+      metadata_checks ( id, song_id, status, issues, saved_snapshot, created_at )
+    `
+    )
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return ((data ?? []) as SongRow[]).map(flattenSong);
+}
+
+export async function fetchSong(id: string): Promise<SongWithExtras> {
+  const { data, error } = await supabase
+    .from('songs')
+    .select(
+      `
+      *,
+      song_moods ( moods ( id, name ) ),
+      metadata_checks ( id, song_id, status, issues, saved_snapshot, created_at )
+    `
+    )
+    .eq('id', id)
+    .single();
+
+  if (error) throw error;
+  return flattenSong(data as SongRow);
+}
+
+export async function fetchMoods(): Promise<Mood[]> {
+  const { data, error } = await supabase.from('moods').select('*').order('name');
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function createSong(
+  userId: string,
+  fields: Partial<Song> & { title: string }
+): Promise<Song> {
+  const { data, error } = await supabase
+    .from('songs')
+    .insert({
+      user_id: userId,
+      title: fields.title,
+      album: emptyToNull(fields.album),
+      isrc: emptyToNull(fields.isrc)?.toUpperCase(),
+      release_date: emptyToNull(fields.release_date),
+      duration_seconds: fields.duration_seconds ?? null,
+      genre: emptyToNull(fields.genre),
+      bpm: fields.bpm ?? null,
+      musical_key: emptyToNull(fields.musical_key),
+      writers: emptyToNull(fields.writers),
+      publishers: emptyToNull(fields.publishers),
+      notes: emptyToNull(fields.notes),
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as Song;
+}
+
+export async function updateSong(id: string, fields: Partial<Song>): Promise<void> {
+  const { error } = await supabase
+    .from('songs')
+    .update({
+      title: fields.title,
+      album: emptyToNull(fields.album),
+      isrc: emptyToNull(fields.isrc)?.toUpperCase(),
+      release_date: emptyToNull(fields.release_date),
+      duration_seconds: fields.duration_seconds ?? null,
+      genre: emptyToNull(fields.genre),
+      bpm: fields.bpm ?? null,
+      musical_key: emptyToNull(fields.musical_key),
+      writers: emptyToNull(fields.writers),
+      publishers: emptyToNull(fields.publishers),
+      notes: emptyToNull(fields.notes),
+    })
+    .eq('id', id);
+
+  if (error) throw error;
+}
+
+export async function deleteSong(id: string): Promise<void> {
+  const { error } = await supabase.from('songs').delete().eq('id', id);
+  if (error) throw error;
+}
+
+export async function setSongMoods(songId: string, moodIds: string[]): Promise<void> {
+  const { error: delError } = await supabase.from('song_moods').delete().eq('song_id', songId);
+  if (delError) throw delError;
+
+  if (moodIds.length === 0) return;
+
+  const { error } = await supabase.from('song_moods').insert(
+    moodIds.map((mood_id) => ({ song_id: songId, mood_id }))
+  );
+  if (error) throw error;
+}
+
+export async function saveMetadataCheck(song: SongWithExtras, userId: string) {
+  const isrc = song.isrc?.replace(/[-\s]/g, '').toUpperCase();
+  let isrcTaken = false;
+
+  if (isrc) {
+    const { data, error } = await supabase
+      .from('songs')
+      .select('id')
+      .eq('user_id', userId)
+      .neq('id', song.id)
+      .ilike('isrc', isrc);
+    if (error) throw error;
+    isrcTaken = (data ?? []).length > 0;
+  }
+
+  const result = runMetadataCheck({ song, moods: song.moods, isrcTaken });
+  const snapshot = snapshotFromSong(song, song.moods);
+
+  const { data, error } = await supabase
+    .from('metadata_checks')
+    .insert({
+      song_id: song.id,
+      status: result.status,
+      issues: result.issues,
+      saved_snapshot: snapshot,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as MetadataCheck;
+}
+
+function emptyToNull(value?: string | null) {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+}
