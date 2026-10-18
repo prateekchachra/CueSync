@@ -1,0 +1,148 @@
+{
+  "catalogue_name": "SAMPLE catalogue (fictional tracks, for testing only)",
+  "tracks": [
+    {
+      "id": "trk_001", "title": "Midnight Pursuit", "artist": "Nova Static", "isrc": "ZZ-SMP-26-00001",
+      "bpm": 92, "key": "F minor", "duration_sec": 184,
+      "moods": ["tense", "dark", "driving"], "genres": ["electronic", "cinematic"],
+      "instrumentation": ["synth bass", "drums", "pulse synths"],
+      "has_lyrics": false, "stems_available": true,
+      "master_owners": [{ "name": "Nova Static Records", "share_pct": 100, "contact_email": "sync@novastatic.example.com" }],
+      "publishing_owners": [{ "name": "Nova Static Publishing", "share_pct": 100, "contact_email": "sync@novastatic.example.com" }],
+      "one_stop": true, "territories": ["worldwide"], "exclusivity": "non_exclusive",
+      "price_range_eur": { "min": 800, "max": 2500 }, "provenance": "human"
+    },
+    {
+      "id": "trk_002", "title": "Neon Rain", "artist": "Kiro", "isrc": "ZZ-SMP-26-00002",
+      "bpm": 78, "key": "A minor", "duration_sec": 212,
+      "moods": ["melancholic", "nostalgic", "night"], "genres": ["synthwave", "pop"],
+      "instrumentation": ["analog synths", "drum machine", "vocals"],
+      "has_lyrics": true, "lyric_themes": ["loss", "city life"], "stems_available": false,
+      "master_owners": [{ "name": "Kiro Music", "share_pct": 100, "contact_email": "hello@kiro.example.com" }],
+      "publishing_owners": [
+        { "name": "Kiro Music", "share_pct": 50, "contact_email": "hello@kiro.example.com" },
+        { "name": "Delta Songs", "share_pct": 50, "contact_email": "licensing@deltasongs.example.com" }
+      ],
+      "one_stop": false, "territories": ["worldwide"], "exclusivity": "non_exclusive",
+      "price_range_eur": { "min": 1200, "max": 3500 }, "provenance": "human"
+    },
+    {
+      "id": "trk_003", "title": "Sunday Market", "artist": "The Marigolds", "isrc": "ZZ-SMP-26-00003",
+      "bpm": 112, "key": "G major", "duration_sec": 168,
+      "moods": ["uplifting", "warm", "playful"], "genres": ["indie folk"],
+      "instrumentation": ["ukulele", "acoustic guitar", "claps"],
+      "has_lyrics": true, "lyric_themes": ["friendship", "summer"], "stems_available": true,
+      "master_owners": [{ "name": "Marigold Records", "share_pct": 100, "contact_email": "sync@marigolds.example.com" }],
+      "publishing_owners": [{ "name": "Marigold Publishing", "share_pct": 100, "contact_email": "sync@marigolds.example.com" }],
+      "one_stop": true, "territories": ["worldwide"], "exclusivity": "non_exclusive",
+      "price_range_eur": { "min": 600, "max": 1800 }, "provenance": "human"
+    },
+    {
+      "id": "trk_004", "title": "Concrete Lullaby", "artist": "Ivo Reyes", "isrc": "ZZ-SMP-26-00004",
+      "bpm": 70, "key": "D major", "duration_sec": 231,
+      "moods": ["intimate", "reflective", "tender"], "genres": ["neo-classical"],
+      "instrumentation": ["piano", "strings"],
+      "has_lyrics": false, "stems_available": true,
+      "master_owners": [{ "name": "Ivo Reyes", "share_pct": 100, "contact_email": "ivo@reyes.example.com" }],
+      "publishing_owners": [{ "name": "Ivo Reyes", "share_pct": 100, "contact_email": "ivo@reyes.example.com" }],
+      "one_stop": true, "territories": ["Europe", "North America"], "exclusivity": "non_exclusive",
+      "price_range_eur": { "min": 500, "max": 1500 }, "provenance": "human"
+    },
+    {
+      "id": "trk_005", "title": "Redline", "artist": "Static Hearts", "isrc": "ZZ-SMP-26-00005",
+      "bpm": 148, "key": "E minor", "duration_sec": 156,
+      "moods": ["aggressive", "energetic", "rebellious"], "genres": ["punk rock"],
+      "instrumentation": ["electric guitar", "bass", "drums", "vocals"],
+      "has_lyrics": true, "lyric_themes": ["rebellion"], "explicit": true, "stems_available": false,
+      "master_owners": [{ "name": "Rampart Records", "share_pct": 100, "contact_email": "sync@rampart.example.com" }],
+      "publishing_owners": [{ "name": "Rampart Publishing", "share_pct": 100, "contact_email": "sync@rampart.example.com" }],
+      "one_stop": true, "territories": ["worldwide"], "exclusivity": "non_exclusive",
+      "price_range_eur": { "min": 1500, "max": 4000 }, "provenance": "human"
+    },
+    {
+      "id": "trk_006", "title": "Glass Garden", "artist": "Aiko Lane", "isrc": "ZZ-SMP-26-00006",
+      "bpm": 60, "key": "C major", "duration_sec": 260,
+      "moods": ["dreamy", "calm", "ethereal"], "genres": ["ambient"],
+      "instrumentation": ["pads", "soft piano"],
+      "has_lyrics": false, "stems_available": true,
+      "master_owners": [{ "name": "Aiko Lane", "share_pct": 100, "contact_email": "aiko@lane.example.com" }],
+      "publishing_owners": [{ "name": "Aiko Lane", "share_pct": 100, "contact_email": "aiko@lane.example.com" }],
+      "one_stop": true, "territories": ["worldwide"], "exclusivity": "non_exclusive",
+      "price_range_eur": { "min": 400, "max": 1200 }, "provenance": "ai_assisted",
+      "notes": "Pads generated with AI tools; melodies human-composed."
+    },
+    {
+      "id": "trk_007", "title": "Border Town", "artist": "Los Caminos", "isrc": "ZZ-SMP-26-00007",
+      "bpm": 104, "key": "B minor", "duration_sec": 199,
+      "moods": ["sunny", "hopeful", "driving"], "genres": ["latin", "pop"],
+      "instrumentation": ["guitar", "percussion", "vocals"],
+      "has_lyrics": true, "lyric_themes": ["road trip", "freedom"], "stems_available": true,
+      "master_owners": [{ "name": "Caminos Records", "share_pct": 100, "contact_email": "licencias@caminos.example.com" }],
+      "publishing_owners": [
+        { "name": "Caminos Records", "share_pct": 60, "contact_email": "licencias@caminos.example.com" },
+        { "name": "Verde Publishing", "share_pct": 40 }
+      ],
+      "one_stop": false, "territories": ["worldwide"], "exclusivity": "non_exclusive",
+      "price_range_eur": { "min": 900, "max": 2800 }, "provenance": "human"
+    },
+    {
+      "id": "trk_008", "title": "Last Light on the Pier", "artist": "Maren", "isrc": "ZZ-SMP-26-00008",
+      "bpm": 84, "key": "E-flat major", "duration_sec": 246,
+      "moods": ["emotional", "bittersweet", "cinematic"], "genres": ["orchestral pop"],
+      "instrumentation": ["strings", "piano", "vocals"],
+      "has_lyrics": true, "lyric_themes": ["goodbye"], "stems_available": true,
+      "master_owners": [{ "name": "Maren", "share_pct": 100, "contact_email": "maren@maren.example.com" }],
+      "publishing_owners": [
+        { "name": "Maren", "share_pct": 60, "contact_email": "maren@maren.example.com" },
+        { "name": "Harbor Songs", "share_pct": 30, "contact_email": "info@harborsongs.example.com" }
+      ],
+      "one_stop": true, "territories": ["worldwide"], "exclusivity": "non_exclusive",
+      "price_range_eur": { "min": 1000, "max": 3000 }, "provenance": "human",
+      "notes": "Publishing splits in this record only add up to 90%. Needs fixing before pitching."
+    },
+    {
+      "id": "trk_009", "title": "Pulse Check", "artist": "Voltage Club", "isrc": "ZZ-SMP-26-00009",
+      "bpm": 128, "key": "A minor", "duration_sec": 205,
+      "moods": ["energetic", "club", "confident"], "genres": ["house"],
+      "instrumentation": ["synths", "kick drum", "claps"],
+      "has_lyrics": false, "stems_available": true,
+      "master_owners": [{ "name": "Voltage Club", "share_pct": 100, "contact_email": "book@voltage.example.com" }],
+      "publishing_owners": [{ "name": "Voltage Club", "share_pct": 100, "contact_email": "book@voltage.example.com" }],
+      "one_stop": true, "territories": ["worldwide"], "exclusivity": "non_exclusive",
+      "price_range_eur": { "min": 700, "max": 2200 }, "provenance": "human"
+    },
+    {
+      "id": "trk_010", "title": "Paper Planes at Dawn", "artist": "The Marigolds", "isrc": "ZZ-SMP-26-00010",
+      "bpm": 96, "key": "D major", "duration_sec": 191,
+      "moods": ["hopeful", "wistful", "warm"], "genres": ["indie"],
+      "instrumentation": ["acoustic guitar", "piano", "vocals"],
+      "has_lyrics": true, "lyric_themes": ["new beginnings"], "stems_available": true,
+      "master_owners": [{ "name": "Marigold Records", "share_pct": 100, "contact_email": "sync@marigolds.example.com" }],
+      "publishing_owners": [{ "name": "Marigold Publishing", "share_pct": 100, "contact_email": "sync@marigolds.example.com" }],
+      "one_stop": true, "territories": ["worldwide"], "exclusivity": "non_exclusive",
+      "price_range_eur": { "min": 600, "max": 1800 }, "provenance": "human"
+    },
+    {
+      "id": "trk_011", "title": "Ashes Don't Argue", "artist": "Ivo Reyes", "isrc": "ZZ-SMP-26-00011",
+      "bpm": 66, "key": "C minor", "duration_sec": 223,
+      "moods": ["dark", "tense", "haunting"], "genres": ["cinematic"],
+      "instrumentation": ["cello", "drones", "percussion"],
+      "has_lyrics": false, "stems_available": true,
+      "master_owners": [{ "name": "Ivo Reyes", "share_pct": 100, "contact_email": "ivo@reyes.example.com" }],
+      "publishing_owners": [{ "name": "Ivo Reyes", "share_pct": 100, "contact_email": "ivo@reyes.example.com" }],
+      "one_stop": true, "territories": ["worldwide"], "exclusivity": "exclusive",
+      "price_range_eur": { "min": 800, "max": 2400 }, "provenance": "human"
+    },
+    {
+      "id": "trk_012", "title": "Tiny Victories", "artist": "Kiro", "isrc": "ZZ-SMP-26-00012",
+      "bpm": 120, "key": "G major", "duration_sec": 178,
+      "moods": ["playful", "bright", "quirky"], "genres": ["electropop"],
+      "instrumentation": ["synths", "drum machine", "bells"],
+      "has_lyrics": false, "stems_available": true,
+      "master_owners": [{ "name": "Kiro Music", "share_pct": 100, "contact_email": "hello@kiro.example.com" }],
+      "publishing_owners": [{ "name": "Kiro Music", "share_pct": 100, "contact_email": "hello@kiro.example.com" }],
+      "one_stop": true, "territories": ["worldwide"], "exclusivity": "non_exclusive",
+      "price_range_eur": { "min": 500, "max": 1600 }, "provenance": "unknown"
+    }
+  ]
+}

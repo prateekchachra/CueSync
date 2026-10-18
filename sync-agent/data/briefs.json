@@ -1,0 +1,12 @@
+[
+  { "id": "b01", "brief": "Tense night chase through a city, around 90 BPM, no vocals, budget under 2000 EUR, must be one-stop.", "expect_any_of": ["trk_001"] },
+  { "id": "b02", "brief": "Warm summer montage for a travel ad, friends laughing, upbeat but not aggressive, vocals are fine, under 1500 EUR.", "expect_any_of": ["trk_003", "trk_010"] },
+  { "id": "b03", "brief": "Quiet, intimate scene at a hospital bedside. Instrumental only, human-made, worldwide rights.", "expect_any_of": ["trk_004"] },
+  { "id": "b04", "brief": "High-energy club scene, 125-130 BPM, instrumental, fast turnaround needed so it must be one-stop.", "expect_any_of": ["trk_009"] },
+  { "id": "b05", "brief": "Dark, haunting cue for a thriller trailer. Cello or drones welcome. I need stems.", "expect_any_of": ["trk_011", "trk_001"] },
+  { "id": "b06", "brief": "Bittersweet goodbye at a pier at sunset, cinematic with vocals. Check clearance carefully before shortlisting.", "expect_any_of": ["trk_008"] },
+  { "id": "b07", "brief": "Road trip montage through Spain and Latin America, sunny, hopeful, lyrics okay.", "expect_any_of": ["trk_007"] },
+  { "id": "b08", "brief": "Playful product reveal for a kids' tech gadget, bright, quirky, instrumental, under 1000 EUR.", "expect_any_of": ["trk_012"] },
+  { "id": "b09", "brief": "Rebellious skate video, punk energy, explicit lyrics are fine, budget up to 4000 EUR.", "expect_any_of": ["trk_005"] },
+  { "id": "b10", "brief": "Calm meditation app intro, dreamy, ethereal, no lyrics. Must be 100% human-made, no AI.", "expect_any_of": ["trk_004"] }
+]

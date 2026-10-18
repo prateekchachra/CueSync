@@ -1,18 +1,19 @@
-import { createContext, useContext, useEffect, useMemo, useState, type PropsWithChildren } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type PropsWithChildren } from 'react';
 import type { Session } from '@supabase/supabase-js';
 
-import { DARZINI } from '@/constants/theme';
+import { DARZINI, DEMO_SUPERVISOR } from '@/constants/theme';
+import { seedDarziniCatalog, seedSupervisorBriefs } from '@/lib/seed';
 import { supabase } from '@/lib/supabase';
-import { seedDarziniCatalogIfEmpty } from '@/lib/seed';
-import type { Profile } from '@/lib/types';
+import type { Profile, Role } from '@/lib/types';
 
 type AuthContextValue = {
   session: Session | null;
   profile: Profile | null;
+  role: Role | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, artistName: string) => Promise<'session' | 'confirm'>;
-  signInAsDarzini: () => Promise<void>;
+  signIn: (email: string, password: string, role: Role) => Promise<void>;
+  signUp: (email: string, password: string, name: string, role: Role) => Promise<'session' | 'confirm'>;
+  signInAsDemo: (role: Role) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -24,12 +25,12 @@ async function loadProfile(userId: string) {
   return data as Profile | null;
 }
 
-async function ensureProfile(userId: string, artistName: string, email?: string | null) {
+async function ensureProfile(userId: string, name: string, email: string | null | undefined, role: Role) {
   const existing = await loadProfile(userId);
   if (existing) return existing;
   const { data, error } = await supabase
     .from('profiles')
-    .insert({ id: userId, artist_name: artistName, email: email ?? null })
+    .insert({ id: userId, artist_name: name, email: email ?? null, role })
     .select()
     .single();
   if (error) {
@@ -40,105 +41,151 @@ async function ensureProfile(userId: string, artistName: string, email?: string 
   return data as Profile;
 }
 
+function metaFor(session: Session) {
+  const meta = session.user.user_metadata ?? {};
+  return {
+    name: (meta.artist_name as string) || session.user.email?.split('@')[0] || 'Member',
+    role: (meta.role === 'supervisor' ? 'supervisor' : 'musician') as Role,
+  };
+}
+
+const roleWord = (role: Role) => (role === 'supervisor' ? 'a supervisor' : 'a musician');
+
 export function AuthProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let mounted = true;
+  // While a sign-in is validating the role (and seeding demo data) we hold back the profile,
+  // so the router keeps the login screen mounted and can show errors.
+  const gate = useRef(false);
+  const mounted = useRef(true);
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (!mounted) return;
+  const hydrate = useCallback(async (next: Session | null) => {
+    if (!next?.user.id) {
+      if (mounted.current) setProfile(null);
+      return;
+    }
+    const { name, role } = metaFor(next);
+    try {
+      const row = await ensureProfile(next.user.id, name, next.user.email, role);
+      if (mounted.current) setProfile(row);
+    } catch {
+      if (mounted.current) setProfile(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    mounted.current = true;
+
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (!mounted.current) return;
       setSession(data.session ?? null);
-      if (data.session?.user.id) {
-        ensureProfile(
-          data.session.user.id,
-          (data.session.user.user_metadata?.artist_name as string) ||
-            data.session.user.email?.split('@')[0] ||
-            'Artist',
-          data.session.user.email
-        )
-          .then((row) => mounted && setProfile(row))
-          .finally(() => mounted && setLoading(false));
-      } else {
-        setLoading(false);
-      }
+      await hydrate(data.session ?? null);
+      if (mounted.current) setLoading(false);
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, next) => {
       setSession(next);
-      if (!next?.user.id) {
-        setProfile(null);
-        return;
-      }
-      ensureProfile(
-        next.user.id,
-        (next.user.user_metadata?.artist_name as string) || next.user.email?.split('@')[0] || 'Artist',
-        next.user.email
-      )
-        .then(setProfile)
-        .catch(() => setProfile(null));
+      if (!next) setProfile(null);
+      else if (!gate.current) hydrate(next);
     });
 
     return () => {
-      mounted = false;
+      mounted.current = false;
       listener.subscription.unsubscribe();
     };
-  }, []);
+  }, [hydrate]);
 
-  const value = useMemo<AuthContextValue>(
-    () => ({
+  const guarded = useCallback(
+    async (work: () => Promise<void>) => {
+      gate.current = true;
+      try {
+        await work();
+      } finally {
+        gate.current = false;
+        const { data } = await supabase.auth.getSession();
+        await hydrate(data.session ?? null);
+      }
+    },
+    [hydrate]
+  );
+
+  const value = useMemo<AuthContextValue>(() => {
+    async function assertRole(expected: Role) {
+      const { data } = await supabase.auth.getUser();
+      const user = data.user;
+      if (!user) return;
+      const row = await loadProfile(user.id);
+      const actual = row?.role ?? (user.user_metadata?.role === 'supervisor' ? 'supervisor' : 'musician');
+      if (actual !== expected) {
+        await supabase.auth.signOut();
+        throw new Error(
+          `This account is registered as ${roleWord(actual)}. Switch to "For ${actual}s" above and log in again.`
+        );
+      }
+    }
+
+    return {
       session,
       profile,
+      role: profile?.role ?? null,
       loading,
-      signIn: async (email, password) => {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-      },
-      signUp: async (email, password, artistName) => {
+      signIn: (email, password, role) =>
+        guarded(async () => {
+          const { error } = await supabase.auth.signInWithPassword({ email, password });
+          if (error) throw error;
+          await assertRole(role);
+        }),
+      signUp: async (email, password, name, role) => {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { artist_name: artistName } },
+          options: { data: { artist_name: name, role } },
         });
         if (error) throw error;
         return data.session ? 'session' : 'confirm';
       },
-      signInAsDarzini: async () => {
+      signInAsDemo: (role) =>
+        guarded(async () => {
+        const demo =
+          role === 'supervisor'
+            ? { email: DEMO_SUPERVISOR.email, password: DEMO_SUPERVISOR.password, name: DEMO_SUPERVISOR.name }
+            : { email: DARZINI.email, password: DARZINI.password, name: DARZINI.artistName };
+
         const { error: signInError } = await supabase.auth.signInWithPassword({
-          email: DARZINI.email,
-          password: DARZINI.password,
+          email: demo.email,
+          password: demo.password,
         });
 
         if (signInError) {
           const { data, error } = await supabase.auth.signUp({
-            email: DARZINI.email,
-            password: DARZINI.password,
-            options: { data: { artist_name: DARZINI.artistName } },
+            email: demo.email,
+            password: demo.password,
+            options: { data: { artist_name: demo.name, role } },
           });
           if (error) throw error;
           if (!data.session) {
             throw new Error(
-              'Darzini was created but email confirmation is on. Turn off Confirm email in Supabase Auth settings, then try again.'
+              'Demo account created but email confirmation is on. Turn off "Confirm email" in Supabase Auth settings, then try again.'
             );
           }
         }
 
         const { data: userData } = await supabase.auth.getUser();
         const user = userData.user;
-        if (user?.id) {
-          await ensureProfile(user.id, DARZINI.artistName, user.email);
-          await seedDarziniCatalogIfEmpty(user.id);
-        }
-      },
+        if (!user?.id) return;
+        await ensureProfile(user.id, demo.name, user.email, role);
+        await assertRole(role);
+        if (role === 'supervisor') await seedSupervisorBriefs(user.id);
+        else await seedDarziniCatalog(user.id);
+        }),
       signOut: async () => {
         const { error } = await supabase.auth.signOut();
         if (error) throw error;
       },
-    }),
-    [session, profile, loading]
-  );
+    };
+  }, [session, profile, loading, guarded]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

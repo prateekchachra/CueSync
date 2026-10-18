@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 import { runMetadataCheck, snapshotFromSong } from './metadata';
-import type { MetadataCheck, Mood, Song, SongWithExtras } from './types';
+import type { MetadataCheck, Mood, PlayableTrack, Song, SongWithExtras } from './types';
 
 type SongRow = Song & {
   song_moods?: { moods: Mood | Mood[] | null }[];
@@ -66,26 +66,26 @@ export async function fetchMoods(): Promise<Mood[]> {
   return data ?? [];
 }
 
-export async function createSong(
-  userId: string,
-  fields: Partial<Song> & { title: string }
-): Promise<Song> {
+export type SongFields = Partial<Omit<Song, 'id' | 'user_id' | 'created_at' | 'updated_at'>> & {
+  title: string;
+};
+
+/** Normalise form output into a DB row: trims strings, empties become null. */
+function songPayload(fields: SongFields) {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(fields)) {
+    if (value === undefined) continue;
+    out[key] = typeof value === 'string' ? emptyToNull(value) : value;
+  }
+  out.title = fields.title.trim();
+  if (typeof out.isrc === 'string') out.isrc = (out.isrc as string).toUpperCase();
+  return out;
+}
+
+export async function createSong(userId: string, fields: SongFields): Promise<Song> {
   const { data, error } = await supabase
     .from('songs')
-    .insert({
-      user_id: userId,
-      title: fields.title,
-      album: emptyToNull(fields.album),
-      isrc: emptyToNull(fields.isrc)?.toUpperCase(),
-      release_date: emptyToNull(fields.release_date),
-      duration_seconds: fields.duration_seconds ?? null,
-      genre: emptyToNull(fields.genre),
-      bpm: fields.bpm ?? null,
-      musical_key: emptyToNull(fields.musical_key),
-      writers: emptyToNull(fields.writers),
-      publishers: emptyToNull(fields.publishers),
-      notes: emptyToNull(fields.notes),
-    })
+    .insert({ ...songPayload(fields), user_id: userId })
     .select()
     .single();
 
@@ -93,24 +93,8 @@ export async function createSong(
   return data as Song;
 }
 
-export async function updateSong(id: string, fields: Partial<Song>): Promise<void> {
-  const { error } = await supabase
-    .from('songs')
-    .update({
-      title: fields.title,
-      album: emptyToNull(fields.album),
-      isrc: emptyToNull(fields.isrc)?.toUpperCase(),
-      release_date: emptyToNull(fields.release_date),
-      duration_seconds: fields.duration_seconds ?? null,
-      genre: emptyToNull(fields.genre),
-      bpm: fields.bpm ?? null,
-      musical_key: emptyToNull(fields.musical_key),
-      writers: emptyToNull(fields.writers),
-      publishers: emptyToNull(fields.publishers),
-      notes: emptyToNull(fields.notes),
-    })
-    .eq('id', id);
-
+export async function updateSong(id: string, fields: SongFields): Promise<void> {
+  const { error } = await supabase.from('songs').update(songPayload(fields)).eq('id', id);
   if (error) throw error;
 }
 
@@ -167,4 +151,18 @@ export async function saveMetadataCheck(song: SongWithExtras, userId: string) {
 function emptyToNull(value?: string | null) {
   const trimmed = value?.trim();
   return trimmed ? trimmed : null;
+}
+
+export function toPlayable(
+  song: Pick<Song, 'id' | 'title' | 'audio_url' | 'poster_url' | 'song_type'>,
+  subtitle: string
+): PlayableTrack {
+  return {
+    id: song.id,
+    title: song.title,
+    subtitle,
+    audio_url: song.audio_url,
+    poster_url: song.poster_url,
+    song_type: song.song_type,
+  };
 }
